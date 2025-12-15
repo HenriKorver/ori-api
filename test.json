@@ -1,0 +1,188 @@
+{
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T09:23:11.142000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T09:23:11.142000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T09:23:11.142000",
+            "geplandeeinde": "2025-12-15T09:23:11.142000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "urn:uuid:3aa1f03a-f691-4bde-b991-15902a3d7ca3"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T09:23:11.142000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T09:23:11.142000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T09:23:11.142000",
+            "geplandeeinde": "2025-12-15T09:23:11.142000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "urn:uuid:2ed0618e-8ec9-45b2-86d2-a0a3d01b59ed"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T09:23:11.142000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T09:23:11.142000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T09:23:11.142000",
+            "geplandeeinde": "2025-12-15T09:23:11.142000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "urn:uuid:02b87d53-fc03-423c-9f1c-c26d5990dcdd"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T10:09:17.070000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T10:09:17.070000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T10:09:17.070000",
+            "geplandeeinde": "2025-12-15T10:09:17.070000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "http://localhost:8000/vergaderingen/_zIIqe3cYn3QY4kznopFk7DChak"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T10:09:17.070000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T10:09:17.070000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T10:09:17.070000",
+            "geplandeeinde": "2025-12-15T10:09:17.070000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "http://localhost:8000/vergaderingen/6eccea9f-5f33-4436-b70d-3511f083462e"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T15:45:48.791000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T15:45:48.791000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T15:45:48.791000",
+            "geplandeeinde": "2025-12-15T15:45:48.791000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "4e5fb03c-f4bf-48d7-b283-368f9067bb3e"
+        },
+        {
+            "webpaginalink": "string",
+            "organisatie": {
+                "gemeente": "gm0363",
+                "naam": "Gemeente Amsterdam"
+            },
+            "dossiertype": "vergadering",
+            "naam": "Raadsvergadering",
+            "aanvang": "2025-12-15T16:34:47.513000",
+            "hoofdvergadering": null,
+            "einde": "2025-12-15T16:34:47.513000",
+            "georganiseerddoorgremium": {
+                "gremiumidentificatie": "string",
+                "gremiumnaam": "string"
+            },
+            "geplandeaanvang": "2025-12-15T16:34:47.513000",
+            "geplandeeinde": "2025-12-15T16:34:47.513000",
+            "geplandedatum": "2025-12-15",
+            "locatie": "string",
+            "vergaderstatus": "string",
+            "vergadertoelichting": "string",
+            "vergaderdatum": "2025-12-15",
+            "vergaderingstype": "string",
+            "deelvergaderingen": null,
+            "pid": "25729498-3249-460d-96bc-8f55c8bc1922"
+        }
+    ]
+}

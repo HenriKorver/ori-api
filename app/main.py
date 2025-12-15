@@ -1,9 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from app.database import create_db_and_tables
 from app.routers import agendapunten, informatieobjecten, vergaderingen
+
+
+class PrettyJSONResponse(JSONResponse):
+    """Custom JSON response with indentation"""
+    media_type = "application/json"
+    
+    def render(self, content) -> bytes:
+        import json
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=2,
+            separators=(", ", ": "),
+        ).encode("utf-8")
 
 
 @asynccontextmanager
@@ -30,6 +46,7 @@ app = FastAPI(
         {"url": "http://127.0.0.1:8000", "description": "Local development server"}
     ],
     lifespan=lifespan,
+    default_response_class=PrettyJSONResponse,
 )
 
 # CORS middleware
