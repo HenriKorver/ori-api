@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
-from app.database import get_session
+from app.database import get_session, API_SERVER
 from app.models import InformatieObjectDB
 from app.schemas import (
     InformatieObject,
@@ -88,8 +88,11 @@ def post_informatieobject(
         org_code = organisatie.waterschap
     
     # Create database object
+    # Generate pid as URL with UUID
+    pid = f"{API_SERVER.rstrip('/')}/informatieobjecten/{uuid.uuid4()}"
+    
     db_obj = InformatieObjectDB(
-        pid=f"urn:uuid:{uuid.uuid4()}",
+        pid=pid,
         webpaginalink=informatieobject.webpaginalink,
         organisatie_type=org_type,
         organisatie_code=org_code,

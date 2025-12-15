@@ -1,8 +1,12 @@
 from sqlmodel import SQLModel, create_engine, Session
 from sqlalchemy.pool import StaticPool
+import os
 
 # SQLite database URL
 DATABASE_URL = "sqlite:///./ori_api.db"
+
+# Server configuration
+API_SERVER = os.getenv("API_SERVER", "http://localhost:8000")
 
 # Create engine
 engine = create_engine(

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
-from app.database import get_session
+from app.database import get_session, API_SERVER
 from app.models import VergaderingDB
 from app.schemas import (
     Vergadering,
@@ -109,7 +109,10 @@ def post_vergadering(
         org_code = organisatie.waterschap
     
     # Create database object
-    # Try to convert id to int, otherwise skip (external reference)
+    # Generate pid as URL with UUID
+    pid = f"{API_SERVER.rstrip('/')}/vergaderingen/{uuid.uuid4()}"
+    
+    # Try to convert ids to int, otherwise skip (external references)
     hoofdvergadering_id = None
     if vergadering.hoofdvergadering:
         try:
@@ -118,7 +121,7 @@ def post_vergadering(
             pass  # External reference, not a database ID
     
     db_vergadering = VergaderingDB(
-        pid=f"urn:uuid:{uuid.uuid4()}",
+        pid=pid,
         webpaginalink=vergadering.webpaginalink,
         organisatie_type=org_type,
         organisatie_code=org_code,
