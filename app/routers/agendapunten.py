@@ -109,8 +109,8 @@ def post_agendapunt(
         org_code = organisatie.waterschap
     
     # Create database object
-    # Generate pid as URL with UUID
-    pid = f"{API_SERVER.rstrip('/')}/agendapunten/{uuid.uuid4()}"
+    # Generate pid as UUID
+    pid = str(uuid.uuid4())
     
     # Try to convert ids to int, otherwise skip (external references)
     vergadering_id = None

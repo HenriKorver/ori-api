@@ -1,4 +1,6 @@
 import pytest
+import uuid
+import datetime
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
@@ -60,14 +62,15 @@ def test_create_vergadering(client: TestClient):
     assert data["naam"] == "Raadsvergadering"
     assert data["dossiertype"] == "vergadering"
     assert data["pid"] is not None
-    assert "vergaderingen" in data["pid"]
+    # PID should be a UUID
+    uuid.UUID(data["pid"])  # Will raise if not valid UUID
 
 
 def test_get_vergaderingen(session: Session, client: TestClient):
     """Test retrieving all vergaderingen"""
     # Create test data
     vergadering1 = VergaderingDB(
-        pid="http://localhost:8000/vergaderingen/test-1",
+        pid=str(uuid.uuid4()),
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -75,7 +78,7 @@ def test_get_vergaderingen(session: Session, client: TestClient):
         naam="Raadsvergadering"
     )
     vergadering2 = VergaderingDB(
-        pid="http://localhost:8000/vergaderingen/test-2",
+        pid=str(uuid.uuid4()),
         organisatie_type="provincie",
         organisatie_code="pv27",
         organisatie_naam="Provincie Groningen",
@@ -97,8 +100,9 @@ def test_get_vergaderingen(session: Session, client: TestClient):
 
 def test_get_vergadering(session: Session, client: TestClient):
     """Test retrieving a specific vergadering"""
+    test_pid = str(uuid.uuid4())
     vergadering = VergaderingDB(
-        pid="http://localhost:8000/vergaderingen/test-single",
+        pid=test_pid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -112,13 +116,14 @@ def test_get_vergadering(session: Session, client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert data["naam"] == "Raadsvergadering"
-    assert data["pid"] == "http://localhost:8000/vergaderingen/test-single"
+    assert data["pid"] == test_pid
 
 
 def test_update_vergadering(session: Session, client: TestClient):
     """Test updating a vergadering"""
+    test_pid = str(uuid.uuid4())
     vergadering = VergaderingDB(
-        pid="http://localhost:8000/vergaderingen/test-update",
+        pid=test_pid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -144,8 +149,9 @@ def test_update_vergadering(session: Session, client: TestClient):
 
 def test_delete_vergadering(session: Session, client: TestClient):
     """Test deleting a vergadering"""
+    test_pid = str(uuid.uuid4())
     vergadering = VergaderingDB(
-        pid="http://localhost:8000/vergaderingen/test-delete",
+        pid=test_pid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -179,13 +185,14 @@ def test_create_agendapunt(client: TestClient):
     assert data["agendapuntnaam"] == "Begrotingsbespreking"
     assert data["dossiertype"] == "agendapunt"
     assert data["pid"] is not None
-    assert "agendapunten" in data["pid"]
+    # PID should be a UUID
+    uuid.UUID(data["pid"])  # Will raise if not valid UUID
 
 
 def test_get_agendapunten(session: Session, client: TestClient):
     """Test retrieving all agendapunten"""
     agendapunt1 = AgendapuntDB(
-        pid="http://localhost:8000/agendapunten/test-1",
+        pid=str(uuid.uuid4()),
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -194,7 +201,7 @@ def test_get_agendapunten(session: Session, client: TestClient):
         vergadering_id=None,
     )
     agendapunt2 = AgendapuntDB(
-        pid="http://localhost:8000/agendapunten/test-2",
+        pid=str(uuid.uuid4()),
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -229,14 +236,14 @@ def test_create_informatieobject(client: TestClient):
     data = response.json()
     assert data["titel"] == "Testdocument"
     assert data["pid"] is not None
-    assert "informatieobjecten" in data["pid"]
+    # PID should be a UUID
+    uuid.UUID(data["pid"])  # Will raise if not valid UUID
 
 
 def test_get_informatieobjecten(session: Session, client: TestClient):
     """Test retrieving all informatieobjecten"""
-    import datetime
     obj1 = InformatieObjectDB(
-        pid="http://localhost:8000/informatieobjecten/test-1",
+        pid=str(uuid.uuid4()),
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -246,7 +253,7 @@ def test_get_informatieobjecten(session: Session, client: TestClient):
         datumingediend=datetime.date.today(),
     )
     obj2 = InformatieObjectDB(
-        pid="http://localhost:8000/informatieobjecten/test-2",
+        pid=str(uuid.uuid4()),
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -268,7 +275,8 @@ def test_get_informatieobjecten(session: Session, client: TestClient):
 # Error handling tests
 def test_get_nonexistent_vergadering(client: TestClient):
     """Test that getting a non-existent vergadering returns 404"""
-    response = client.get("/vergaderingen/http://localhost:8000/vergaderingen/nonexistent")
+    nonexistent_uuid = str(uuid.uuid4())
+    response = client.get(f"/vergaderingen/{nonexistent_uuid}")
     assert response.status_code == 404
     data = response.json()
     assert "detail" in data

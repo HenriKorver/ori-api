@@ -88,8 +88,8 @@ def post_informatieobject(
         org_code = organisatie.waterschap
     
     # Create database object
-    # Generate pid as URL with UUID
-    pid = f"{API_SERVER.rstrip('/')}/informatieobjecten/{uuid.uuid4()}"
+    # Generate pid as UUID
+    pid = str(uuid.uuid4())
     
     db_obj = InformatieObjectDB(
         pid=pid,
