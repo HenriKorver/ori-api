@@ -50,6 +50,28 @@ API documentatie (Swagger UI): `http://localhost:8000/docs`
 
 Alternative API documentatie (ReDoc): `http://localhost:8000/redoc`
 
+## Testen
+
+Installeer eerst de test dependencies:
+```bash
+pip install pytest httpx
+```
+
+Run alle tests:
+```bash
+pytest
+```
+
+Run tests met verbose output:
+```bash
+pytest -v
+```
+
+Run specifieke test:
+```bash
+pytest tests/test_main.py::test_create_vergadering -v
+```
+
 ## Structuur
 
 - `app/main.py` - Hoofd FastAPI applicatie
