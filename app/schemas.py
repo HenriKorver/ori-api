@@ -119,6 +119,7 @@ class VergaderingBase(BaseModel):
     vergaderdatum: Optional[date] = None
     vergaderingstype: Optional[str] = None
     deelvergaderingen: Optional[List[str]] = None
+    agendapunten: Optional[List[str]] = None
 
 
 class VergaderingZonderPid(VergaderingBase):

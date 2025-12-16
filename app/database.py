@@ -25,4 +25,3 @@ def get_session():
     """Dependency for getting database sessions"""
     with Session(engine) as session:
         yield session
-source .venv/bin/activate

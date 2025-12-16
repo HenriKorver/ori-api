@@ -54,6 +54,12 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
             url=f"/vergaderingen/{db_vergadering.hoofdvergadering_id}",
         )
     
+    # Build agendapunten URI references
+    agendapunten_uris = [
+        f"{API_SERVER}/agendapunten/{agendapunt.pid}"
+        for agendapunt in db_vergadering.agendapunten
+    ] if db_vergadering.agendapunten else []
+    
     return Vergadering(
         pid=db_vergadering.pid,
         webpaginalink=db_vergadering.webpaginalink,
@@ -72,6 +78,7 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
         vergadertoelichting=db_vergadering.vergadertoelichting,
         vergaderdatum=db_vergadering.vergaderdatum,
         vergaderingstype=db_vergadering.vergaderingstype,
+        agendapunten=agendapunten_uris,
     )
 
 

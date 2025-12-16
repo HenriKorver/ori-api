@@ -304,3 +304,61 @@ def test_create_agendapunt_missing_required_field(client: TestClient):
         }
     )
     assert response.status_code == 422
+
+
+def test_vergadering_includes_agendapunten_references(session: Session, client: TestClient):
+    """Test that a vergadering response includes references to its agendapunten."""
+    # Create vergadering directly in database
+    vergadering = VergaderingDB(
+        pid=str(uuid.uuid4()),
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="vergadering",
+        naam="Raadsvergadering",
+    )
+    session.add(vergadering)
+    session.commit()
+    session.refresh(vergadering)
+    
+    # Create 2 agendapunten linked to this vergadering
+    agendapunt1 = AgendapuntDB(
+        pid=str(uuid.uuid4()),
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 1",
+        vergadering_id=vergadering.id,
+    )
+    agendapunt2 = AgendapuntDB(
+        pid=str(uuid.uuid4()),
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 2",
+        vergadering_id=vergadering.id,
+    )
+    session.add(agendapunt1)
+    session.add(agendapunt2)
+    session.commit()
+    
+    # Get vergadering and verify agendapunten field
+    response = client.get(f"/vergaderingen/{vergadering.pid}")
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "agendapunten" in data
+    assert len(data["agendapunten"]) == 2
+    
+    # Verify format of URIs
+    api_server = "http://localhost:8000"
+    agendapunt_pids = [agendapunt1.pid, agendapunt2.pid]
+    for uri in data["agendapunten"]:
+        assert uri.startswith(f"{api_server}/agendapunten/")
+        # Extract PID and verify it's a valid UUID
+        pid = uri.split("/")[-1]
+        assert pid in agendapunt_pids
+        # Verify it's a valid UUID format
+        uuid.UUID(pid)

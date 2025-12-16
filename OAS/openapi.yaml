@@ -976,6 +976,14 @@ components:
           description: "URL-referenties naar de deelvergaderingen van deze vergadering."
           title: Deelvergaderingen
           uniqueItems: true
+        agendapunten:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: "URL-referenties naar de agendapunten van deze vergadering."
+          title: Agendapunten
+          uniqueItems: true
     VergaderingZonderPid:
       type: "object"
       description: "Een vergadering is een bijeenkomst van meerdere mensen die met elkaar spreken en/of afspraken maken over onderwerpen die op de agenda staan. Bij aanlevering krijgt een vergadering een Pid van Open Overheid."

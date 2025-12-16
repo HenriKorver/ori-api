@@ -1,7 +1,18 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import uvicorn
+import os
+import sys
+
+# Allow running this file directly (python app/main.py) by ensuring project root on sys.path
+if __package__ in (None, ""):
+    current_dir = os.path.dirname(__file__)
+    project_root = os.path.dirname(current_dir)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
 
 from app.database import create_db_and_tables
 from app.routers import agendapunten, informatieobjecten, vergaderingen
@@ -73,3 +84,6 @@ def root():
         "docs": "/docs",
         "redoc": "/redoc",
     }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
