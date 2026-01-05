@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from app.database import get_session, API_SERVER
-from app.models import AgendapuntDB
+from app.models import AgendapuntDB, VergaderingDB
 from app.schemas import (
     Agendapunt,
     AgendapuntZonderPid,
@@ -116,7 +116,8 @@ def post_agendapunt(
     vergadering_id = None
     if agendapunt.vergadering and agendapunt.vergadering.id:
         try:
-            vergadering_id = int(agendapunt.vergadering.id)
+            vergadering_id = agendapunt.vergadering.id
+            vergadering_id = int(session.exec(select(VergaderingDB.id).where(VergaderingDB.pid == agendapunt.vergadering.id)).first() or 0)
         except (ValueError, TypeError):
             pass
     

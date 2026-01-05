@@ -129,6 +129,9 @@ class VergaderingZonderPid(VergaderingBase):
 class Vergadering(VergaderingBase):
     pid: str
 
+# class VergaderingMetAgendapunten(Vergadering):
+#     agendapunten: List[Agendapunt] = []
+
 
 # Paginated responses
 class PaginatedAgendapuntList(BaseModel):
