@@ -62,15 +62,21 @@ def test_create_vergadering(client: TestClient):
     assert data["naam"] == "Raadsvergadering"
     assert data["dossiertype"] == "vergadering"
     assert data["pid"] is not None
-    # PID should be a UUID
-    uuid.UUID(data["pid"])  # Will raise if not valid UUID
+    assert data["pid_uuid"] is not None
+    # PID should be a URL
+    assert data["pid"].startswith("http://localhost:8000/vergaderingen/")
+    # PID_UUID should be a valid UUID
+    uuid.UUID(data["pid_uuid"])
 
 
 def test_get_vergaderingen(session: Session, client: TestClient):
     """Test retrieving all vergaderingen"""
     # Create test data
+    uuid1 = str(uuid.uuid4())
+    uuid2 = str(uuid.uuid4())
     vergadering1 = VergaderingDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/vergaderingen/{uuid1}",
+        pid_uuid=uuid1,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -78,7 +84,8 @@ def test_get_vergaderingen(session: Session, client: TestClient):
         naam="Raadsvergadering"
     )
     vergadering2 = VergaderingDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/vergaderingen/{uuid2}",
+        pid_uuid=uuid2,
         organisatie_type="provincie",
         organisatie_code="pv27",
         organisatie_naam="Provincie Groningen",
@@ -100,9 +107,11 @@ def test_get_vergaderingen(session: Session, client: TestClient):
 
 def test_get_vergadering(session: Session, client: TestClient):
     """Test retrieving a specific vergadering"""
-    test_pid = str(uuid.uuid4())
+    test_uuid = str(uuid.uuid4())
+    test_pid = f"http://localhost:8000/vergaderingen/{test_uuid}"
     vergadering = VergaderingDB(
         pid=test_pid,
+        pid_uuid=test_uuid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -112,18 +121,21 @@ def test_get_vergadering(session: Session, client: TestClient):
     session.add(vergadering)
     session.commit()
 
-    response = client.get(f"/vergaderingen/{vergadering.pid}")
+    response = client.get(f"/vergaderingen/{vergadering.pid_uuid}")
     assert response.status_code == 200
     data = response.json()
     assert data["naam"] == "Raadsvergadering"
     assert data["pid"] == test_pid
+    assert data["pid_uuid"] == test_uuid
 
 
 def test_update_vergadering(session: Session, client: TestClient):
     """Test updating a vergadering"""
-    test_pid = str(uuid.uuid4())
+    test_uuid = str(uuid.uuid4())
+    test_pid = f"http://localhost:8000/vergaderingen/{test_uuid}"
     vergadering = VergaderingDB(
         pid=test_pid,
+        pid_uuid=test_uuid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -134,12 +146,13 @@ def test_update_vergadering(session: Session, client: TestClient):
     session.commit()
 
     response = client.put(
-        f"/vergaderingen/{vergadering.pid}",
+        f"/vergaderingen/{vergadering.pid_uuid}",
         json={
             "organisatie": {"gemeente": "gm0363", "naam": "Gemeente Amsterdam"},
             "dossiertype": "vergadering",
             "naam": "Nieuwe Naam",
             "pid": vergadering.pid,
+            "pid_uuid": vergadering.pid_uuid,
         }
     )
     assert response.status_code == 201
@@ -149,9 +162,11 @@ def test_update_vergadering(session: Session, client: TestClient):
 
 def test_delete_vergadering(session: Session, client: TestClient):
     """Test deleting a vergadering"""
-    test_pid = str(uuid.uuid4())
+    test_uuid = str(uuid.uuid4())
+    test_pid = f"http://localhost:8000/vergaderingen/{test_uuid}"
     vergadering = VergaderingDB(
         pid=test_pid,
+        pid_uuid=test_uuid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -161,7 +176,7 @@ def test_delete_vergadering(session: Session, client: TestClient):
     session.add(vergadering)
     session.commit()
 
-    response = client.delete(f"/vergaderingen/{vergadering.pid}")
+    response = client.delete(f"/vergaderingen/{vergadering.pid_uuid}")
     assert response.status_code == 200
 
     vergadering_in_db = session.get(VergaderingDB, vergadering.id)
@@ -185,14 +200,20 @@ def test_create_agendapunt(client: TestClient):
     assert data["agendapuntnaam"] == "Begrotingsbespreking"
     assert data["dossiertype"] == "agendapunt"
     assert data["pid"] is not None
-    # PID should be a UUID
-    uuid.UUID(data["pid"])  # Will raise if not valid UUID
+    assert data["pid_uuid"] is not None
+    # PID should be a URL
+    assert data["pid"].startswith("http://localhost:8000/agendapunten/")
+    # PID_UUID should be a valid UUID
+    uuid.UUID(data["pid_uuid"])
 
 
 def test_get_agendapunten(session: Session, client: TestClient):
     """Test retrieving all agendapunten"""
+    uuid1 = str(uuid.uuid4())
+    uuid2 = str(uuid.uuid4())
     agendapunt1 = AgendapuntDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/agendapunten/{uuid1}",
+        pid_uuid=uuid1,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -201,7 +222,8 @@ def test_get_agendapunten(session: Session, client: TestClient):
         vergadering_id=None,
     )
     agendapunt2 = AgendapuntDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/agendapunten/{uuid2}",
+        pid_uuid=uuid2,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -236,14 +258,20 @@ def test_create_informatieobject(client: TestClient):
     data = response.json()
     assert data["titel"] == "Testdocument"
     assert data["pid"] is not None
-    # PID should be a UUID
-    uuid.UUID(data["pid"])  # Will raise if not valid UUID
+    assert data["pid_uuid"] is not None
+    # PID should be a URL
+    assert data["pid"].startswith("http://localhost:8000/informatieobjecten/")
+    # PID_UUID should be a valid UUID
+    uuid.UUID(data["pid_uuid"])
 
 
 def test_get_informatieobjecten(session: Session, client: TestClient):
     """Test retrieving all informatieobjecten"""
+    uuid1 = str(uuid.uuid4())
+    uuid2 = str(uuid.uuid4())
     obj1 = InformatieObjectDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/informatieobjecten/{uuid1}",
+        pid_uuid=uuid1,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -253,7 +281,8 @@ def test_get_informatieobjecten(session: Session, client: TestClient):
         datumingediend=datetime.date.today(),
     )
     obj2 = InformatieObjectDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/informatieobjecten/{uuid2}",
+        pid_uuid=uuid2,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -309,8 +338,10 @@ def test_create_agendapunt_missing_required_field(client: TestClient):
 def test_vergadering_includes_agendapunten_references(session: Session, client: TestClient):
     """Test that a vergadering response includes references to its agendapunten."""
     # Create vergadering directly in database
+    vergadering_uuid = str(uuid.uuid4())
     vergadering = VergaderingDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/vergaderingen/{vergadering_uuid}",
+        pid_uuid=vergadering_uuid,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -322,8 +353,11 @@ def test_vergadering_includes_agendapunten_references(session: Session, client: 
     session.refresh(vergadering)
     
     # Create 2 agendapunten linked to this vergadering
+    uuid1 = str(uuid.uuid4())
+    uuid2 = str(uuid.uuid4())
     agendapunt1 = AgendapuntDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/agendapunten/{uuid1}",
+        pid_uuid=uuid1,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -332,7 +366,8 @@ def test_vergadering_includes_agendapunten_references(session: Session, client: 
         vergadering_id=vergadering.id,
     )
     agendapunt2 = AgendapuntDB(
-        pid=str(uuid.uuid4()),
+        pid=f"http://localhost:8000/agendapunten/{uuid2}",
+        pid_uuid=uuid2,
         organisatie_type="gemeente",
         organisatie_code="gm0363",
         organisatie_naam="Gemeente Amsterdam",
@@ -345,7 +380,7 @@ def test_vergadering_includes_agendapunten_references(session: Session, client: 
     session.commit()
     
     # Get vergadering and verify agendapunten field
-    response = client.get(f"/vergaderingen/{vergadering.pid}")
+    response = client.get(f"/vergaderingen/{vergadering.pid_uuid}")
     assert response.status_code == 200
     data = response.json()
     
@@ -354,11 +389,11 @@ def test_vergadering_includes_agendapunten_references(session: Session, client: 
     
     # Verify format of URIs
     api_server = "http://localhost:8000"
-    agendapunt_pids = [agendapunt1.pid, agendapunt2.pid]
+    agendapunt_uuids = [uuid1, uuid2]
     for uri in data["agendapunten"]:
         assert uri.startswith(f"{api_server}/agendapunten/")
-        # Extract PID and verify it's a valid UUID
-        pid = uri.split("/")[-1]
-        assert pid in agendapunt_pids
+        # Extract UUID and verify it's in our list
+        uri_uuid = uri.split("/")[-1]
+        assert uri_uuid in agendapunt_uuids
         # Verify it's a valid UUID format
-        uuid.UUID(pid)
+        uuid.UUID(uri_uuid)
