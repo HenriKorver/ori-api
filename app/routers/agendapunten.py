@@ -52,7 +52,8 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
         )
     
     return Agendapunt(
-        pid=db_agendapunt.pid,
+        pid=f"{API_SERVER}/agendapunten/{db_agendapunt.pid_uuid}",
+        pid_uuid=db_agendapunt.pid_uuid,
         webpaginalink=db_agendapunt.webpaginalink,
         organisatie=organisatie,
         dossiertype=db_agendapunt.dossiertype,
@@ -76,9 +77,27 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
 
 
 @router.get("", response_model=PaginatedAgendapuntList)
-def get_agendapunten(session: Session = Depends(get_session)):
+def get_agendapunten(
+    vergadering_pid: Optional[str] = None,
+    session: Session = Depends(get_session)
+):
     """Alle agendapunten opvragen"""
     statement = select(AgendapuntDB)
+    
+    # Filter by vergadering_pid if provided
+    if vergadering_pid:
+        # First get the internal id from the pid
+        vergadering_statement = select(VergaderingDB.id).where(VergaderingDB.pid == vergadering_pid)
+        internal_id = session.exec(vergadering_statement).first()
+        
+        if not internal_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="De gevraagde vergadering is niet gevonden.",
+            )
+        
+        statement = statement.where(AgendapuntDB.vergadering_id == internal_id)
+    
     agendapunten = session.exec(statement).all()
     
     results = [db_to_schema(ap) for ap in agendapunten]
@@ -109,15 +128,19 @@ def post_agendapunt(
         org_code = organisatie.waterschap
     
     # Create database object
-    # Generate pid as UUID
-    pid = str(uuid.uuid4())
+    # Generate pid as URL with UUID
+    generated_uuid = str(uuid.uuid4())
+    pid = f"{API_SERVER}/agendapunten/{generated_uuid}"
     
     # Try to convert ids to int, otherwise skip (external references)
     vergadering_id = None
     if agendapunt.vergadering and agendapunt.vergadering.id:
         try:
-            vergadering_id = agendapunt.vergadering.id
-            vergadering_id = int(session.exec(select(VergaderingDB.id).where(VergaderingDB.pid == agendapunt.vergadering.id)).first() or 0)
+            # Extract UUID from URL if it's a full URL, otherwise use as-is
+            vergadering_uuid = agendapunt.vergadering.id
+            if "/" in vergadering_uuid:
+                vergadering_uuid = vergadering_uuid.split("/")[-1]
+            vergadering_id = int(session.exec(select(VergaderingDB.id).where(VergaderingDB.pid_uuid == vergadering_uuid)).first() or 0)
         except (ValueError, TypeError):
             pass
     
@@ -130,6 +153,7 @@ def post_agendapunt(
     
     db_agendapunt = AgendapuntDB(
         pid=pid,
+        pid_uuid=generated_uuid,
         webpaginalink=agendapunt.webpaginalink,
         organisatie_type=org_type,
         organisatie_code=org_code,
@@ -163,7 +187,7 @@ def post_agendapunt(
 @router.get("/{id}", response_model=Agendapunt)
 def get_agendapunt(id: str, session: Session = Depends(get_session)):
     """Een specifiek agendapunt opvragen"""
-    statement = select(AgendapuntDB).where(AgendapuntDB.pid == id)
+    statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == id)
     agendapunt = session.exec(statement).first()
     
     if not agendapunt:
@@ -182,7 +206,7 @@ def put_agendapunt(
     session: Session = Depends(get_session),
 ):
     """Het wijzigen van een agendapunt"""
-    statement = select(AgendapuntDB).where(AgendapuntDB.pid == id)
+    statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == id)
     db_agendapunt = session.exec(statement).first()
     
     if not db_agendapunt:
@@ -207,6 +231,7 @@ def put_agendapunt(
     db_agendapunt.webpaginalink = agendapunt.webpaginalink
     db_agendapunt.dossiertype = agendapunt.dossiertype
     db_agendapunt.agendapuntnaam = agendapunt.agendapuntnaam
+    db_agendapunt.pid_uuid = agendapunt.pid_uuid
     
     # Try to convert ids to int
     if agendapunt.vergadering and agendapunt.vergadering.id:
@@ -248,7 +273,7 @@ def put_agendapunt(
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def del_agendapunt(id: str, session: Session = Depends(get_session)):
     """Het bericht voor het verwijderen van een agendapunt"""
-    statement = select(AgendapuntDB).where(AgendapuntDB.pid == id)
+    statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == id)
     agendapunt = session.exec(statement).first()
     
     if not agendapunt:

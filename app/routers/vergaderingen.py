@@ -56,12 +56,13 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
     
     # Build agendapunten URI references
     agendapunten_uris = [
-        f"{API_SERVER}/agendapunten/{agendapunt.pid}"
+        f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}"
         for agendapunt in db_vergadering.agendapunten
     ] if db_vergadering.agendapunten else []
     
     return Vergadering(
-        pid=db_vergadering.pid,
+        pid=f"{API_SERVER}/vergaderingen/{db_vergadering.pid_uuid}",
+        pid_uuid=db_vergadering.pid_uuid,
         webpaginalink=db_vergadering.webpaginalink,
         organisatie=organisatie,
         dossiertype=db_vergadering.dossiertype,
@@ -117,7 +118,8 @@ def post_vergadering(
     
     # Create database object
     # Generate pid as UUID
-    pid = str(uuid.uuid4())
+    generated_uuid = str(uuid.uuid4())
+    pid = f"{API_SERVER}/vergaderingen/{generated_uuid}"
     
     # Try to convert ids to int, otherwise skip (external references)
     hoofdvergadering_id = None
@@ -129,6 +131,7 @@ def post_vergadering(
     
     db_vergadering = VergaderingDB(
         pid=pid,
+        pid_uuid=generated_uuid,
         webpaginalink=vergadering.webpaginalink,
         organisatie_type=org_type,
         organisatie_code=org_code,
@@ -160,7 +163,7 @@ def post_vergadering(
 @router.get("/{id}", response_model=Vergadering)
 def get_vergadering(id: str, session: Session = Depends(get_session)):
     """Een specifieke vergadering opvragen"""
-    statement = select(VergaderingDB).where(VergaderingDB.pid == id)
+    statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == id)
     vergadering = session.exec(statement).first()
     
     if not vergadering:
@@ -179,7 +182,7 @@ def put_vergadering(
     session: Session = Depends(get_session),
 ):
     """Het wijzigen van een vergadering"""
-    statement = select(VergaderingDB).where(VergaderingDB.pid == id)
+    statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == id)
     db_vergadering = session.exec(statement).first()
     
     if not db_vergadering:
@@ -204,6 +207,7 @@ def put_vergadering(
     db_vergadering.webpaginalink = vergadering.webpaginalink
     db_vergadering.dossiertype = vergadering.dossiertype
     db_vergadering.naam = vergadering.naam
+    db_vergadering.pid_uuid = vergadering.pid_uuid
     db_vergadering.aanvang = vergadering.aanvang
     
     # Try to convert id to int, otherwise skip
@@ -236,7 +240,7 @@ def put_vergadering(
 @router.delete("/{id}", status_code=status.HTTP_200_OK)
 def del_vergadering(id: str, session: Session = Depends(get_session)):
     """Het bericht voor het verwijderen van een vergadering"""
-    statement = select(VergaderingDB).where(VergaderingDB.pid == id)
+    statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == id)
     vergadering = session.exec(statement).first()
     
     if not vergadering:

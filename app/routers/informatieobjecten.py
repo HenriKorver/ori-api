@@ -37,7 +37,8 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
         )
     
     return InformatieObject(
-        pid=db_obj.pid,
+        pid=f"{API_SERVER}/informatieobjecten/{db_obj.pid_uuid}",
+        pid_uuid=db_obj.pid_uuid,
         webpaginalink=db_obj.webpaginalink,
         organisatie=organisatie,
         titel=db_obj.titel,
@@ -89,10 +90,12 @@ def post_informatieobject(
     
     # Create database object
     # Generate pid as UUID
-    pid = str(uuid.uuid4())
+    generated_uuid = str(uuid.uuid4())
+    pid = f"{API_SERVER}/informatieobjecten/{generated_uuid}"
     
     db_obj = InformatieObjectDB(
         pid=pid,
+        pid_uuid=generated_uuid,
         webpaginalink=informatieobject.webpaginalink,
         organisatie_type=org_type,
         organisatie_code=org_code,
@@ -122,7 +125,7 @@ def post_informatieobject(
 @router.get("/{id}", response_model=InformatieObject)
 def get_informatieobject(id: str, session: Session = Depends(get_session)):
     """Een specifiek informatieobject opvragen"""
-    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid == id)
+    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid_uuid == id)
     informatieobject = session.exec(statement).first()
     
     if not informatieobject:
@@ -142,7 +145,7 @@ def put_informatieobject(
     session: Session = Depends(get_session),
 ):
     """Het wijzigen van een Informatieobject"""
-    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid == id)
+    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid_uuid == id)
     db_obj = session.exec(statement).first()
     
     if not db_obj:
@@ -166,6 +169,7 @@ def put_informatieobject(
     db_obj.organisatie_naam = organisatie.naam
     db_obj.webpaginalink = informatieobject.webpaginalink
     db_obj.titel = informatieobject.titel
+    db_obj.pid_uuid = informatieobject.pid_uuid
     db_obj.wooinformatiecategorie = informatieobject.wooinformatiecategorie
     db_obj.datumingediend = informatieobject.datumingediend
     db_obj.external_id = informatieobject.id
@@ -193,7 +197,7 @@ def del_informatieobject(
     session: Session = Depends(get_session),
 ):
     """Het bericht voor het verwijderen van een informatieobject"""
-    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid == id)
+    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid_uuid == id)
     informatieobject = session.exec(statement).first()
     
     if not informatieobject:

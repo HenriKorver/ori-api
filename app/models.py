@@ -11,6 +11,7 @@ class AgendapuntDB(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     pid: str = Field(index=True, unique=True)
+    pid_uuid: Optional[str] = Field(default=None, index=True)
     webpaginalink: Optional[str] = None
     
     # Organisatie fields (simplified - stored as JSON-like fields)
@@ -55,6 +56,7 @@ class InformatieObjectDB(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     pid: str = Field(index=True, unique=True)
+    pid_uuid: Optional[str] = Field(default=None, index=True)
     webpaginalink: str
     
     # Organisatie fields
@@ -86,6 +88,7 @@ class VergaderingDB(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     pid: str = Field(index=True, unique=True)
+    pid_uuid: Optional[str] = Field(default=None, index=True)
     webpaginalink: Optional[str] = None
     
     # Organisatie fields

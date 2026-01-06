@@ -65,11 +65,32 @@ class AgendapuntBase(BaseModel):
 
 
 class AgendapuntZonderPid(AgendapuntBase):
-    pass
+    pid_uuid: Optional[str] = None
 
 
-class Agendapunt(AgendapuntBase):
+class Agendapunt(BaseModel):
     pid: str
+    pid_uuid: Optional[str] = None
+    webpaginalink: Optional[str] = None
+    organisatie: Organisatie
+    dossiertype: str = Field(..., example="agendapunt")
+    agendapuntnaam: str
+    vergadering: VerwijzingNaarResource
+    hoofdagendapunt: Optional[VerwijzingNaarResource] = None
+    omschrijving: Optional[str] = None
+    volgnummer: Optional[str] = None
+    subagendapunten: Optional[List[str]] = None
+    tussenkop: Optional[str] = None
+    overig: Optional[str] = None
+    starttijd: Optional[datetime] = None
+    eindtijd: Optional[datetime] = None
+    locatie: Optional[str] = None
+    geplandvolgnummer: Optional[str] = None
+    geplandeeindtijd: Optional[datetime] = None
+    geplandestarttijd: Optional[datetime] = None
+    indicatiehamerstuk: Optional[bool] = None
+    indicatiebehandeld: Optional[bool] = None
+    indicatiebesloten: Optional[bool] = None
 
 
 # Informatieobject schemas
@@ -93,11 +114,28 @@ class InformatieObjectBase(BaseModel):
 
 
 class InformatieObjectZonderPid(InformatieObjectBase):
-    pass
+    pid_uuid: Optional[str] = None
 
 
-class InformatieObject(InformatieObjectBase):
+class InformatieObject(BaseModel):
     pid: str
+    pid_uuid: Optional[str] = None
+    webpaginalink: str = Field(..., example="https://example.com/mijn-pagina.html")
+    organisatie: Organisatie
+    titel: str
+    wooinformatiecategorie: str = Field(..., example="c_db4862c3")
+    datumingediend: date = Field(..., example="2017-02-09")
+    id: Optional[str] = None
+    auteur: Optional[str] = None
+    bronorganisatie: Optional[str] = None
+    creatiedatum: Optional[str] = None
+    informatieobjecttype: Optional[str] = None
+    formaat: Optional[str] = None
+    omschrijving: Optional[str] = None
+    taal: Optional[str] = None
+    vergaderingen: Optional[List[VerwijzingNaarResource]] = None
+    agendapunten: Optional[List[VerwijzingNaarResource]] = None
+    gerelateerdinformatieobject: Optional[GerelateerdInformatieobject] = None
 
 
 # Vergadering schemas
@@ -123,11 +161,30 @@ class VergaderingBase(BaseModel):
 
 
 class VergaderingZonderPid(VergaderingBase):
-    pass
+    pid_uuid: Optional[str] = None
 
 
-class Vergadering(VergaderingBase):
+class Vergadering(BaseModel):
     pid: str
+    pid_uuid: Optional[str] = None
+    webpaginalink: Optional[str] = None
+    organisatie: Organisatie
+    dossiertype: str = Field(..., example="vergadering")
+    naam: str = Field(..., example="Raadsvergadering")
+    aanvang: Optional[datetime] = None
+    hoofdvergadering: Optional[VerwijzingNaarResource] = None
+    einde: Optional[datetime] = None
+    georganiseerddoorgremium: Optional[Gremium] = None
+    geplandeaanvang: Optional[datetime] = None
+    geplandeeinde: Optional[datetime] = None
+    geplandedatum: Optional[date] = None
+    locatie: Optional[str] = None
+    vergaderstatus: Optional[str] = None
+    vergadertoelichting: Optional[str] = None
+    vergaderdatum: Optional[date] = None
+    vergaderingstype: Optional[str] = None
+    deelvergaderingen: Optional[List[str]] = None
+    agendapunten: Optional[List[str]] = None
 
 # class VergaderingMetAgendapunten(Vergadering):
 #     agendapunten: List[Agendapunt] = []
