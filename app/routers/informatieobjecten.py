@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
 from app.database import get_session, API_SERVER
-from app.models import InformatieObjectDB
+from app.models import InformatieObjectDB, AgendapuntDB
 from app.schemas import (
     InformatieObject,
     InformatieObjectZonderPid,
@@ -36,6 +36,12 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
             naam=db_obj.organisatie_naam,
         )
     
+    # Build agendapunten URI references
+    agendapunten_refs = [
+        {"id": f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}", "url": f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}"}
+        for agendapunt in db_obj.agendapunten
+    ] if db_obj.agendapunten else None
+    
     return InformatieObject(
         pid=f"{API_SERVER}/informatieobjecten/{db_obj.pid_uuid}",
         pid_uuid=db_obj.pid_uuid,
@@ -52,6 +58,7 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
         formaat=db_obj.formaat,
         omschrijving=db_obj.omschrijving,
         taal=db_obj.taal,
+        agendapunten=agendapunten_refs,
     )
 
 
@@ -118,6 +125,25 @@ def post_informatieobject(
     session.add(db_obj)
     session.commit()
     session.refresh(db_obj)
+    
+    # Link agendapunten if provided
+    if informatieobject.agendapunten:
+        for agendapunt_ref in informatieobject.agendapunten:
+            # Extract UUID from id (could be URL or UUID)
+            agendapunt_uuid = agendapunt_ref.id
+            if "/" in agendapunt_uuid:
+                agendapunt_uuid = agendapunt_uuid.split("/")[-1]
+            
+            # Find agendapunt by pid_uuid
+            agendapunt_statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == agendapunt_uuid)
+            agendapunt = session.exec(agendapunt_statement).first()
+            
+            if agendapunt:
+                db_obj.agendapunten.append(agendapunt)
+        
+        session.add(db_obj)
+        session.commit()
+        session.refresh(db_obj)
     
     return db_to_schema(db_obj)
 

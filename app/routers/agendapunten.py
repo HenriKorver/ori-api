@@ -51,6 +51,12 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
             url=f"/agendapunten/{db_agendapunt.hoofdagendapunt_id}",
         )
     
+    # Build informatieobjecten URI references
+    informatieobjecten_uris = [
+        f"{API_SERVER}/informatieobjecten/{informatieobject.pid_uuid}"
+        for informatieobject in db_agendapunt.informatieobjecten
+    ] if db_agendapunt.informatieobjecten else []
+    
     return Agendapunt(
         pid=f"{API_SERVER}/agendapunten/{db_agendapunt.pid_uuid}",
         pid_uuid=db_agendapunt.pid_uuid,
@@ -73,6 +79,7 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
         indicatiehamerstuk=db_agendapunt.indicatiehamerstuk,
         indicatiebehandeld=db_agendapunt.indicatiebehandeld,
         indicatiebesloten=db_agendapunt.indicatiebesloten,
+        informatieobjecten=informatieobjecten_uris,
     )
 
 

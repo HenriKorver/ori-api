@@ -4,6 +4,15 @@ from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
 
 
+# Junction table for many-to-many relationship
+class AgendapuntInformatieObjectLink(SQLModel, table=True):
+    """Link table between agendapunten and informatieobjecten"""
+    __tablename__ = "agendapunt_informatieobject_link"
+    
+    agendapunt_id: Optional[int] = Field(default=None, foreign_key="agendapunten.id", primary_key=True)
+    informatieobject_id: Optional[int] = Field(default=None, foreign_key="informatieobjecten.id", primary_key=True)
+
+
 # Database Models
 class AgendapuntDB(SQLModel, table=True):
     """Agendapunt database model"""
@@ -48,6 +57,10 @@ class AgendapuntDB(SQLModel, table=True):
         sa_relationship_kwargs={"remote_side": "AgendapuntDB.id"}
     )
     subagendapunten: List["AgendapuntDB"] = Relationship(back_populates="hoofdagendapunt")
+    informatieobjecten: List["InformatieObjectDB"] = Relationship(
+        back_populates="agendapunten",
+        link_model=AgendapuntInformatieObjectLink
+    )
 
 
 class InformatieObjectDB(SQLModel, table=True):
@@ -80,6 +93,12 @@ class InformatieObjectDB(SQLModel, table=True):
     # Gerelateerd informatieobject
     gerelateerd_informatieobject_id: Optional[str] = None
     gerelateerd_rol: Optional[str] = None
+    
+    # Relationships
+    agendapunten: List["AgendapuntDB"] = Relationship(
+        back_populates="informatieobjecten",
+        link_model=AgendapuntInformatieObjectLink
+    )
 
 
 class VergaderingDB(SQLModel, table=True):

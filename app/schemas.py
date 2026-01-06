@@ -62,6 +62,7 @@ class AgendapuntBase(BaseModel):
     indicatiehamerstuk: Optional[bool] = None
     indicatiebehandeld: Optional[bool] = None
     indicatiebesloten: Optional[bool] = None
+    informatieobjecten: Optional[List[str]] = None
 
 
 class AgendapuntZonderPid(AgendapuntBase):
@@ -91,6 +92,7 @@ class Agendapunt(BaseModel):
     indicatiehamerstuk: Optional[bool] = None
     indicatiebehandeld: Optional[bool] = None
     indicatiebesloten: Optional[bool] = None
+    informatieobjecten: Optional[List[str]] = None
 
 
 # Informatieobject schemas
