@@ -40,7 +40,6 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
     # Construct vergadering reference
     vergadering_ref = VerwijzingNaarResource(
         id=str(db_agendapunt.vergadering_id) if db_agendapunt.vergadering_id else "",
-        url=f"/vergaderingen/{db_agendapunt.vergadering_id}" if db_agendapunt.vergadering_id else None,
     )
     
     # Construct hoofdagendapunt reference if exists
@@ -48,7 +47,6 @@ def db_to_schema(db_agendapunt: AgendapuntDB) -> Agendapunt:
     if db_agendapunt.hoofdagendapunt_id:
         hoofdagendapunt_ref = VerwijzingNaarResource(
             id=str(db_agendapunt.hoofdagendapunt_id),
-            url=f"/agendapunten/{db_agendapunt.hoofdagendapunt_id}",
         )
     
     # Build informatieobjecten URI references

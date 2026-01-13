@@ -51,7 +51,6 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
     if db_vergadering.hoofdvergadering_id:
         hoofdvergadering_ref = VerwijzingNaarResource(
             id=str(db_vergadering.hoofdvergadering_id),
-            url=f"/vergaderingen/{db_vergadering.hoofdvergadering_id}",
         )
     
     # Build agendapunten URI references

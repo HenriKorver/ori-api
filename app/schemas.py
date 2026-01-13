@@ -31,7 +31,6 @@ class Gremium(BaseModel):
 # Verwijzing naar resource
 class VerwijzingNaarResource(BaseModel):
     id: str
-    url: Optional[str] = None
 
 
 # Gerelateerd informatieobject
