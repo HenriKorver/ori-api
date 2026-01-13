@@ -1,6 +1,7 @@
 import pytest
 import uuid
 import datetime
+from datetime import date
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
@@ -397,3 +398,442 @@ def test_vergadering_includes_agendapunten_references(session: Session, client: 
         assert uri_uuid in agendapunt_uuids
         # Verify it's a valid UUID format
         uuid.UUID(uri_uuid)
+
+
+def test_vergadering_includes_informatieobjecten_via_agendapunten(session: Session, client: TestClient):
+    """Test that a vergadering response includes informatieobjecten that are linked to its agendapunten."""
+    # Create vergadering
+    vergadering_uuid = str(uuid.uuid4())
+    vergadering = VergaderingDB(
+        pid=f"http://localhost:8000/vergaderingen/{vergadering_uuid}",
+        pid_uuid=vergadering_uuid,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="vergadering",
+        naam="Raadsvergadering",
+    )
+    session.add(vergadering)
+    session.commit()
+    session.refresh(vergadering)
+    
+    # Create 2 agendapunten linked to this vergadering
+    agp_uuid1 = str(uuid.uuid4())
+    agp_uuid2 = str(uuid.uuid4())
+    agendapunt1 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid1}",
+        pid_uuid=agp_uuid1,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 1",
+        vergadering_id=vergadering.id,
+    )
+    agendapunt2 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid2}",
+        pid_uuid=agp_uuid2,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 2",
+        vergadering_id=vergadering.id,
+    )
+    session.add(agendapunt1)
+    session.add(agendapunt2)
+    session.commit()
+    session.refresh(agendapunt1)
+    session.refresh(agendapunt2)
+    
+    # Create 3 informatieobjecten
+    info_uuid1 = str(uuid.uuid4())
+    info_uuid2 = str(uuid.uuid4())
+    info_uuid3 = str(uuid.uuid4())
+    informatieobject1 = InformatieObjectDB(
+        pid=f"http://localhost:8000/informatieobjecten/{info_uuid1}",
+        pid_uuid=info_uuid1,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        titel="Document 1",
+        wooinformatiecategorie="c_db4862c3",
+        datumingediend=date(2017, 2, 9),
+        webpaginalink="https://example.com/doc1",
+    )
+    informatieobject2 = InformatieObjectDB(
+        pid=f"http://localhost:8000/informatieobjecten/{info_uuid2}",
+        pid_uuid=info_uuid2,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        titel="Document 2",
+        wooinformatiecategorie="c_db4862c3",
+        datumingediend=date(2017, 2, 9),
+        webpaginalink="https://example.com/doc2",
+    )
+    informatieobject3 = InformatieObjectDB(
+        pid=f"http://localhost:8000/informatieobjecten/{info_uuid3}",
+        pid_uuid=info_uuid3,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        titel="Document 3",
+        wooinformatiecategorie="c_db4862c3",
+        datumingediend=date(2017, 2, 9),
+        webpaginalink="https://example.com/doc3",
+    )
+    session.add(informatieobject1)
+    session.add(informatieobject2)
+    session.add(informatieobject3)
+    session.commit()
+    session.refresh(informatieobject1)
+    session.refresh(informatieobject2)
+    session.refresh(informatieobject3)
+    
+    # Link informatieobjecten to agendapunten via junction table
+    # agendapunt1 linked to info1 and info2
+    # agendapunt2 linked to info2 and info3
+    # Expected result: vergadering should show all three informatieobjecten
+    from app.models import AgendapuntInformatieObjectLink
+    
+    link1 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt1.id,
+        informatieobject_id=informatieobject1.id
+    )
+    link2 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt1.id,
+        informatieobject_id=informatieobject2.id
+    )
+    link3 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt2.id,
+        informatieobject_id=informatieobject2.id
+    )
+    link4 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt2.id,
+        informatieobject_id=informatieobject3.id
+    )
+    session.add(link1)
+    session.add(link2)
+    session.add(link3)
+    session.add(link4)
+    session.commit()
+    
+    # Get vergadering and verify informatieobjecten field
+    response = client.get(f"/vergaderingen/{vergadering.pid_uuid}")
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Verify informatieobjecten field exists and has all 3 unique objects
+    assert "informatieobjecten" in data
+    assert len(data["informatieobjecten"]) == 3
+    
+    # Verify format of URIs and that all informatieobjecten are present
+    api_server = "http://localhost:8000"
+    expected_uuids = {info_uuid1, info_uuid2, info_uuid3}
+    found_uuids = set()
+    
+    for uri in data["informatieobjecten"]:
+        assert uri.startswith(f"{api_server}/informatieobjecten/")
+        # Extract UUID
+        uri_uuid = uri.split("/")[-1]
+        found_uuids.add(uri_uuid)
+        # Verify it's a valid UUID format
+        uuid.UUID(uri_uuid)
+    
+    # Verify all expected UUIDs are found (no duplicates because it's a set)
+    assert found_uuids == expected_uuids
+
+
+def test_informatieobject_includes_vergaderingen_via_agendapunten(session: Session, client: TestClient):
+    """Test that an informatieobject response includes vergaderingen via its agendapunten."""
+    # Create 2 vergaderingen
+    verg_uuid1 = str(uuid.uuid4())
+    verg_uuid2 = str(uuid.uuid4())
+    vergadering1 = VergaderingDB(
+        pid=f"http://localhost:8000/vergaderingen/{verg_uuid1}",
+        pid_uuid=verg_uuid1,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="vergadering",
+        naam="Raadsvergadering 1",
+    )
+    vergadering2 = VergaderingDB(
+        pid=f"http://localhost:8000/vergaderingen/{verg_uuid2}",
+        pid_uuid=verg_uuid2,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="vergadering",
+        naam="Raadsvergadering 2",
+    )
+    session.add(vergadering1)
+    session.add(vergadering2)
+    session.commit()
+    session.refresh(vergadering1)
+    session.refresh(vergadering2)
+    
+    # Create 3 agendapunten - 2 for vergadering1, 1 for vergadering2
+    agp_uuid1 = str(uuid.uuid4())
+    agp_uuid2 = str(uuid.uuid4())
+    agp_uuid3 = str(uuid.uuid4())
+    agendapunt1 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid1}",
+        pid_uuid=agp_uuid1,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 1",
+        vergadering_id=vergadering1.id,
+    )
+    agendapunt2 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid2}",
+        pid_uuid=agp_uuid2,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 2",
+        vergadering_id=vergadering1.id,
+    )
+    agendapunt3 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid3}",
+        pid_uuid=agp_uuid3,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 3",
+        vergadering_id=vergadering2.id,
+    )
+    session.add(agendapunt1)
+    session.add(agendapunt2)
+    session.add(agendapunt3)
+    session.commit()
+    session.refresh(agendapunt1)
+    session.refresh(agendapunt2)
+    session.refresh(agendapunt3)
+    
+    # Create informatieobject
+    info_uuid = str(uuid.uuid4())
+    informatieobject = InformatieObjectDB(
+        pid=f"http://localhost:8000/informatieobjecten/{info_uuid}",
+        pid_uuid=info_uuid,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        titel="Document 1",
+        wooinformatiecategorie="c_db4862c3",
+        datumingediend=date(2017, 2, 9),
+        webpaginalink="https://example.com/doc1",
+    )
+    session.add(informatieobject)
+    session.commit()
+    session.refresh(informatieobject)
+    
+    # Link informatieobject to all 3 agendapunten (2 from vergadering1, 1 from vergadering2)
+    from app.models import AgendapuntInformatieObjectLink
+    
+    link1 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt1.id,
+        informatieobject_id=informatieobject.id
+    )
+    link2 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt2.id,
+        informatieobject_id=informatieobject.id
+    )
+    link3 = AgendapuntInformatieObjectLink(
+        agendapunt_id=agendapunt3.id,
+        informatieobject_id=informatieobject.id
+    )
+    session.add(link1)
+    session.add(link2)
+    session.add(link3)
+    session.commit()
+    
+    # Get informatieobject and verify vergaderingen field
+    response = client.get(f"/informatieobjecten/{informatieobject.pid_uuid}")
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Verify vergaderingen field exists and has both vergaderingen
+    assert "vergaderingen" in data
+    assert data["vergaderingen"] is not None
+    assert len(data["vergaderingen"]) == 2
+    
+    # Verify format of references and that both vergaderingen are present
+    api_server = "http://localhost:8000"
+    expected_uuids = {verg_uuid1, verg_uuid2}
+    found_uuids = set()
+    
+    for ref in data["vergaderingen"]:
+        assert "id" in ref
+        assert ref["id"].startswith(f"{api_server}/vergaderingen/")
+        # Extract UUID
+        ref_uuid = ref["id"].split("/")[-1]
+        found_uuids.add(ref_uuid)
+        # Verify it's a valid UUID format
+        uuid.UUID(ref_uuid)
+    
+    # Verify both expected vergaderingen are found
+    assert found_uuids == expected_uuids
+    
+    # Also verify agendapunten are present
+    assert "agendapunten" in data
+    assert data["agendapunten"] is not None
+    assert len(data["agendapunten"]) == 3
+
+
+def test_post_informatieobject_with_vergadering_reference(session: Session, client: TestClient):
+    """Test that posting an informatieobject with vergadering reference links to vergadering's agendapunten."""
+    # Create vergadering
+    verg_uuid = str(uuid.uuid4())
+    vergadering = VergaderingDB(
+        pid=f"http://localhost:8000/vergaderingen/{verg_uuid}",
+        pid_uuid=verg_uuid,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="vergadering",
+        naam="Raadsvergadering",
+    )
+    session.add(vergadering)
+    session.commit()
+    session.refresh(vergadering)
+    
+    # Create 2 agendapunten for this vergadering
+    agp_uuid1 = str(uuid.uuid4())
+    agp_uuid2 = str(uuid.uuid4())
+    agendapunt1 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid1}",
+        pid_uuid=agp_uuid1,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 1",
+        vergadering_id=vergadering.id,
+    )
+    agendapunt2 = AgendapuntDB(
+        pid=f"http://localhost:8000/agendapunten/{agp_uuid2}",
+        pid_uuid=agp_uuid2,
+        organisatie_type="gemeente",
+        organisatie_code="gm0363",
+        organisatie_naam="Gemeente Amsterdam",
+        dossiertype="agendapunt",
+        agendapuntnaam="Agendapunt 2",
+        vergadering_id=vergadering.id,
+    )
+    session.add(agendapunt1)
+    session.add(agendapunt2)
+    session.commit()
+    
+    # POST informatieobject with vergadering reference
+    info_data = {
+        "webpaginalink": "https://example.com/doc.pdf",
+        "organisatie": {
+            "gemeente": "gm0363",
+            "naam": "Gemeente Amsterdam"
+        },
+        "titel": "Test Document",
+        "wooinformatiecategorie": "c_db4862c3",
+        "datumingediend": "2017-02-09",
+        "vergaderingen": [{"id": f"http://localhost:8000/vergaderingen/{verg_uuid}"}]
+    }
+    
+    response = client.post("/informatieobjecten", json=info_data)
+    assert response.status_code == 201
+    data = response.json()
+    
+    # Verify vergaderingen in response
+    assert "vergaderingen" in data
+    assert data["vergaderingen"] is not None
+    assert len(data["vergaderingen"]) == 1
+    assert data["vergaderingen"][0]["id"] == f"http://localhost:8000/vergaderingen/{verg_uuid}"
+    
+    # Verify it's linked to both agendapunten
+    assert "agendapunten" in data
+    assert data["agendapunten"] is not None
+    assert len(data["agendapunten"]) == 2
+    
+    # Extract agendapunt UUIDs from response
+    agendapunt_uuids = {ref["id"].split("/")[-1] for ref in data["agendapunten"]}
+    expected_uuids = {agp_uuid1, agp_uuid2}
+    assert agendapunt_uuids == expected_uuids
+
+
+def test_get_vergadering_shows_linked_informatieobjecten(session: Session, client: TestClient):
+    """Test that getting a vergadering shows informatieobjecten linked via agendapunten."""
+    # Create vergadering via API
+    verg_data = {
+        "organisatie": {
+            "gemeente": "gm0363",
+            "naam": "Gemeente Amsterdam"
+        },
+        "dossiertype": "vergadering",
+        "naam": "Raadsvergadering"
+    }
+    verg_response = client.post("/vergaderingen", json=verg_data)
+    assert verg_response.status_code == 201
+    verg = verg_response.json()
+    verg_uuid = verg["pid_uuid"]
+    
+    # Create 2 agendapunten for this vergadering via API
+    agp1_data = {
+        "organisatie": {
+            "gemeente": "gm0363",
+            "naam": "Gemeente Amsterdam"
+        },
+        "dossiertype": "agendapunt",
+        "agendapuntnaam": "Agendapunt 1",
+        "vergadering": {"id": f"http://localhost:8000/vergaderingen/{verg_uuid}"}
+    }
+    agp1_response = client.post("/agendapunten", json=agp1_data)
+    assert agp1_response.status_code == 201
+    agp1 = agp1_response.json()
+    
+    agp2_data = {
+        "organisatie": {
+            "gemeente": "gm0363",
+            "naam": "Gemeente Amsterdam"
+        },
+        "dossiertype": "agendapunt",
+        "agendapuntnaam": "Agendapunt 2",
+        "vergadering": {"id": f"http://localhost:8000/vergaderingen/{verg_uuid}"}
+    }
+    agp2_response = client.post("/agendapunten", json=agp2_data)
+    assert agp2_response.status_code == 201
+    agp2 = agp2_response.json()
+    
+    # Create informatieobject linked to agendapunt 1
+    info_data = {
+        "webpaginalink": "https://example.com/doc.pdf",
+        "organisatie": {
+            "gemeente": "gm0363",
+            "naam": "Gemeente Amsterdam"
+        },
+        "titel": "Test Document",
+        "wooinformatiecategorie": "c_db4862c3",
+        "datumingediend": "2017-02-09",
+        "agendapunten": [{"id": agp1["pid"]}]
+    }
+    info_response = client.post("/informatieobjecten", json=info_data)
+    assert info_response.status_code == 201
+    info = info_response.json()
+    
+    # Now GET the vergadering and verify informatieobjecten are included
+    get_response = client.get(f"/vergaderingen/{verg_uuid}")
+    assert get_response.status_code == 200
+    data = get_response.json()
+    
+    # Verify agendapunten are present
+    assert "agendapunten" in data
+    assert len(data["agendapunten"]) == 2
+    
+    # Verify informatieobjecten are present
+    assert "informatieobjecten" in data
+    assert data["informatieobjecten"] is not None
+    assert len(data["informatieobjecten"]) == 1
+    assert data["informatieobjecten"][0] == info["pid"]

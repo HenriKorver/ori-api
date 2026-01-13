@@ -1,8 +1,9 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from app.database import get_session, API_SERVER
-from app.models import VergaderingDB
+from app.models import VergaderingDB, AgendapuntDB, InformatieObjectDB
 from app.schemas import (
     Vergadering,
     VergaderingZonderPid,
@@ -59,6 +60,19 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
         for agendapunt in db_vergadering.agendapunten
     ] if db_vergadering.agendapunten else []
     
+    # Collect all unique informatieobjecten from all agendapunten
+    informatieobject_uuids = set()
+    if db_vergadering.agendapunten:
+        for agendapunt in db_vergadering.agendapunten:
+            if agendapunt.informatieobjecten:
+                for informatieobject in agendapunt.informatieobjecten:
+                    informatieobject_uuids.add(informatieobject.pid_uuid)
+    
+    informatieobjecten_uris = [
+        f"{API_SERVER}/informatieobjecten/{uuid}"
+        for uuid in sorted(informatieobject_uuids)
+    ]
+    
     return Vergadering(
         pid=f"{API_SERVER}/vergaderingen/{db_vergadering.pid_uuid}",
         pid_uuid=db_vergadering.pid_uuid,
@@ -79,13 +93,16 @@ def db_to_schema(db_vergadering: VergaderingDB) -> Vergadering:
         vergaderdatum=db_vergadering.vergaderdatum,
         vergaderingstype=db_vergadering.vergaderingstype,
         agendapunten=agendapunten_uris,
+        informatieobjecten=informatieobjecten_uris,
     )
 
 
 @router.get("", response_model=PaginatedVergaderingList)
 def get_vergaderingen(session: Session = Depends(get_session)):
     """Alle vergaderingen opvragen"""
-    statement = select(VergaderingDB)
+    statement = select(VergaderingDB).options(
+        selectinload(VergaderingDB.agendapunten).selectinload(AgendapuntDB.informatieobjecten)
+    )
     vergaderingen = session.exec(statement).all()
     
     results = [db_to_schema(v) for v in vergaderingen]
@@ -156,13 +173,21 @@ def post_vergadering(
     session.commit()
     session.refresh(db_vergadering)
     
+    # Reload with relationships
+    statement = select(VergaderingDB).where(VergaderingDB.id == db_vergadering.id).options(
+        selectinload(VergaderingDB.agendapunten).selectinload(AgendapuntDB.informatieobjecten)
+    )
+    db_vergadering = session.exec(statement).first()
+    
     return db_to_schema(db_vergadering)
 
 
 @router.get("/{id}", response_model=Vergadering)
 def get_vergadering(id: str, session: Session = Depends(get_session)):
     """Een specifieke vergadering opvragen"""
-    statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == id)
+    statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == id).options(
+        selectinload(VergaderingDB.agendapunten).selectinload(AgendapuntDB.informatieobjecten)
+    )
     vergadering = session.exec(statement).first()
     
     if not vergadering:

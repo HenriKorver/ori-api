@@ -159,6 +159,7 @@ class VergaderingBase(BaseModel):
     vergaderingstype: Optional[str] = None
     deelvergaderingen: Optional[List[str]] = None
     agendapunten: Optional[List[str]] = None
+    informatieobjecten: Optional[List[str]] = None
 
 
 class VergaderingZonderPid(VergaderingBase):
@@ -186,6 +187,7 @@ class Vergadering(BaseModel):
     vergaderingstype: Optional[str] = None
     deelvergaderingen: Optional[List[str]] = None
     agendapunten: Optional[List[str]] = None
+    informatieobjecten: Optional[List[str]] = None
 
 # class VergaderingMetAgendapunten(Vergadering):
 #     agendapunten: List[Agendapunt] = []

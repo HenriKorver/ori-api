@@ -1,8 +1,9 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from app.database import get_session, API_SERVER
-from app.models import InformatieObjectDB, AgendapuntDB
+from app.models import InformatieObjectDB, AgendapuntDB, VergaderingDB
 from app.schemas import (
     InformatieObject,
     InformatieObjectZonderPid,
@@ -11,6 +12,7 @@ from app.schemas import (
     Gemeente,
     Provincie,
     Waterschap,
+    VerwijzingNaarResource,
 )
 import uuid
 
@@ -38,9 +40,23 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
     
     # Build agendapunten URI references
     agendapunten_refs = [
-        {"id": f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}", "url": f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}"}
+        VerwijzingNaarResource(id=f"{API_SERVER}/agendapunten/{agendapunt.pid_uuid}")
         for agendapunt in db_obj.agendapunten
     ] if db_obj.agendapunten else None
+    
+    # Collect unique vergaderingen via agendapunten
+    vergadering_uuids = set()
+    if db_obj.agendapunten:
+        for agendapunt in db_obj.agendapunten:
+            if agendapunt.vergadering_id:
+                # Access the vergadering relationship
+                if agendapunt.vergadering:
+                    vergadering_uuids.add(agendapunt.vergadering.pid_uuid)
+    
+    vergaderingen_refs = [
+        VerwijzingNaarResource(id=f"{API_SERVER}/vergaderingen/{verg_uuid}")
+        for verg_uuid in sorted(vergadering_uuids)
+    ] if vergadering_uuids else None
     
     return InformatieObject(
         pid=f"{API_SERVER}/informatieobjecten/{db_obj.pid_uuid}",
@@ -58,6 +74,7 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
         formaat=db_obj.formaat,
         omschrijving=db_obj.omschrijving,
         taal=db_obj.taal,
+        vergaderingen=vergaderingen_refs,
         agendapunten=agendapunten_refs,
     )
 
@@ -65,7 +82,9 @@ def db_to_schema(db_obj: InformatieObjectDB) -> InformatieObject:
 @router.get("", response_model=PaginatedInformatieObjectList)
 def get_informatieobjecten(session: Session = Depends(get_session)):
     """Alle informatieobjecten opvragen"""
-    statement = select(InformatieObjectDB)
+    statement = select(InformatieObjectDB).options(
+        selectinload(InformatieObjectDB.agendapunten).selectinload(AgendapuntDB.vergadering)
+    )
     informatieobjecten = session.exec(statement).all()
     
     results = [db_to_schema(obj) for obj in informatieobjecten]
@@ -126,6 +145,28 @@ def post_informatieobject(
     session.commit()
     session.refresh(db_obj)
     
+    # Track all linked agendapunten
+    linked_agendapunten = []
+    
+    # Link vergaderingen if provided - link to all agendapunten of those vergaderingen
+    if informatieobject.vergaderingen:
+        for vergadering_ref in informatieobject.vergaderingen:
+            # Extract UUID from id (could be URL or UUID)
+            vergadering_uuid = vergadering_ref.id
+            if "/" in vergadering_uuid:
+                vergadering_uuid = vergadering_uuid.split("/")[-1]
+            
+            # Find vergadering and its agendapunten
+            vergadering_statement = select(VergaderingDB).where(VergaderingDB.pid_uuid == vergadering_uuid).options(
+                selectinload(VergaderingDB.agendapunten)
+            )
+            vergadering = session.exec(vergadering_statement).first()
+            
+            if vergadering and vergadering.agendapunten:
+                for agendapunt in vergadering.agendapunten:
+                    if agendapunt not in linked_agendapunten:
+                        linked_agendapunten.append(agendapunt)
+    
     # Link agendapunten if provided
     if informatieobject.agendapunten:
         for agendapunt_ref in informatieobject.agendapunten:
@@ -134,16 +175,29 @@ def post_informatieobject(
             if "/" in agendapunt_uuid:
                 agendapunt_uuid = agendapunt_uuid.split("/")[-1]
             
-            # Find agendapunt by pid_uuid
-            agendapunt_statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == agendapunt_uuid)
+            # Find agendapunt by pid_uuid with eager loading
+            agendapunt_statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == agendapunt_uuid).options(
+                selectinload(AgendapuntDB.vergadering)
+            )
             agendapunt = session.exec(agendapunt_statement).first()
             
-            if agendapunt:
-                db_obj.agendapunten.append(agendapunt)
+            if agendapunt and agendapunt not in linked_agendapunten:
+                linked_agendapunten.append(agendapunt)
+    
+    # Add all linked agendapunten to the informatieobject
+    if linked_agendapunten:
+        for agendapunt in linked_agendapunten:
+            db_obj.agendapunten.append(agendapunt)
         
         session.add(db_obj)
         session.commit()
         session.refresh(db_obj)
+        
+        # Reload with relationships
+        statement = select(InformatieObjectDB).where(InformatieObjectDB.id == db_obj.id).options(
+            selectinload(InformatieObjectDB.agendapunten).selectinload(AgendapuntDB.vergadering)
+        )
+        db_obj = session.exec(statement).first()
     
     return db_to_schema(db_obj)
 
@@ -151,7 +205,9 @@ def post_informatieobject(
 @router.get("/{id}", response_model=InformatieObject)
 def get_informatieobject(id: str, session: Session = Depends(get_session)):
     """Een specifiek informatieobject opvragen"""
-    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid_uuid == id)
+    statement = select(InformatieObjectDB).where(InformatieObjectDB.pid_uuid == id).options(
+        selectinload(InformatieObjectDB.agendapunten).selectinload(AgendapuntDB.vergadering)
+    )
     informatieobject = session.exec(statement).first()
     
     if not informatieobject:
