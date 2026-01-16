@@ -1,8 +1,9 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from app.database import get_session, API_SERVER
-from app.models import AgendapuntDB, VergaderingDB
+from app.models import AgendapuntDB, VergaderingDB, InformatieObjectDB
 from app.schemas import (
     Agendapunt,
     AgendapuntZonderPid,
@@ -87,7 +88,9 @@ def get_agendapunten(
     session: Session = Depends(get_session)
 ):
     """Alle agendapunten opvragen"""
-    statement = select(AgendapuntDB)
+    statement = select(AgendapuntDB).options(
+        selectinload(AgendapuntDB.informatieobjecten)
+    )
     
     # Filter by vergadering_pid if provided
     if vergadering_pid:
@@ -186,13 +189,21 @@ def post_agendapunt(
     session.commit()
     session.refresh(db_agendapunt)
     
+    # Reload with relationships
+    statement = select(AgendapuntDB).where(AgendapuntDB.id == db_agendapunt.id).options(
+        selectinload(AgendapuntDB.informatieobjecten)
+    )
+    db_agendapunt = session.exec(statement).first()
+    
     return db_to_schema(db_agendapunt)
 
 
 @router.get("/{id}", response_model=Agendapunt)
 def get_agendapunt(id: str, session: Session = Depends(get_session)):
     """Een specifiek agendapunt opvragen"""
-    statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == id)
+    statement = select(AgendapuntDB).where(AgendapuntDB.pid_uuid == id).options(
+        selectinload(AgendapuntDB.informatieobjecten)
+    )
     agendapunt = session.exec(statement).first()
     
     if not agendapunt:
