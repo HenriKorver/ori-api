@@ -68,6 +68,85 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       tags:
         - "Events"
+  /webhook-subscriptions:
+    post:
+      operationId: "registerWebhook"
+      summary: "Registreer een webhook URL"
+      description: "Registreer een webhook URL om notificaties te ontvangen over event verwerking."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookSubscriptionRequest"
+      responses:
+        201:
+          description: "Webhook subscription succesvol geregistreerd"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookSubscription"
+        400:
+          description: "Ongeldige webhook data"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: "Je bent niet geautoriseerd voor deze aanvraag."
+      tags:
+        - "Webhooks"
+    get:
+      operationId: "getWebhookSubscriptions"
+      summary: "Alle webhook subscriptions opvragen"
+      description: "Haal alle geregistreerde webhook subscriptions op."
+      responses:
+        200:
+          description: "Zoekactie geslaagd"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookSubscription"
+        401:
+          description: "Je bent niet geautoriseerd voor deze aanvraag."
+      tags:
+        - "Webhooks"
+  /webhook-subscriptions/{subscriptionId}:
+    delete:
+      operationId: "deleteWebhookSubscription"
+      summary: "Verwijder een webhook subscription"
+      description: "Verwijder een geregistreerde webhook subscription."
+      parameters:
+        - in: path
+          name: subscriptionId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: "De ID van de webhook subscription"
+      responses:
+        200:
+          description: "Webhook subscription succesvol verwijderd"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Webhook subscription succesvol verwijderd"
+        401:
+          description: "Je bent niet geautoriseerd voor deze aanvraag."
+        404:
+          description: "Webhook subscription niet gevonden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      tags:
+        - "Webhooks"
   /agendapunten:
     get:
       operationId: "getagendapunten"
@@ -1166,6 +1245,83 @@ components:
         detail:
           type: string
           description: "Omschrijving van de foutmelding."
+    WebhookSubscriptionRequest:
+      type: object
+      description: "Request om een webhook subscription te registreren"
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+          description: "De webhook URL waar notificaties naartoe gestuurd moeten worden"
+          example: "https://mijn-gemeente.nl/webhooks/ori-events"
+        events:
+          type: array
+          description: "De event typen waarvoor notificaties ontvangen moeten worden"
+          items:
+            type: string
+            enum:
+              - eventProcessed
+              - eventFailed
+          minItems: 1
+          example: ["eventProcessed", "eventFailed"]
+        description:
+          type: string
+          description: "Optionele beschrijving van deze webhook subscription"
+          example: "Webhook voor gemeente Amsterdam ORI events"
+        secret:
+          type: string
+          description: "Optionele secret voor het valideren van webhook authenticiteit (HMAC signing)"
+          format: password
+    WebhookSubscription:
+      type: object
+      description: "Een geregistreerde webhook subscription"
+      required:
+        - subscriptionId
+        - url
+        - events
+        - createdAt
+        - active
+      properties:
+        subscriptionId:
+          type: string
+          format: uuid
+          description: "Unieke identifier van de webhook subscription"
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        url:
+          type: string
+          format: uri
+          description: "De webhook URL"
+          example: "https://mijn-gemeente.nl/webhooks/ori-events"
+        events:
+          type: array
+          description: "De event typen waarvoor deze webhook geregistreerd is"
+          items:
+            type: string
+            enum:
+              - eventProcessed
+              - eventFailed
+          example: ["eventProcessed", "eventFailed"]
+        description:
+          type: string
+          description: "Beschrijving van deze webhook subscription"
+          example: "Webhook voor gemeente Amsterdam ORI events"
+        createdAt:
+          type: string
+          format: date-time
+          description: "Tijdstip waarop de subscription is aangemaakt"
+          example: "2026-03-12T09:00:00Z"
+        active:
+          type: boolean
+          description: "Of de webhook subscription actief is"
+          example: true
+        lastTriggeredAt:
+          type: string
+          format: date-time
+          description: "Tijdstip waarop de webhook voor het laatst is aangeroepen"
+          example: "2026-03-12T10:05:23Z"
 webhooks:
   eventProcessed:
     post:
