@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: Multi-Event Webhook Example
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+security: []
+
+webhooks:
+
+  # --- Event 1: User registered ---
+  userRegistered:
+    post:
+      operationId: onUserRegistered
+      summary: A new user has registered
+      requestBody:
+        description: Information about the newly registered user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+            example:
+              id: 1001
+              email: "henri@example.com"
+              name: "Henri Korver"
+      responses:
+        '200':
+          description: Webhook successfully processed
+
+  # --- Event 2: Invoice paid ---
+  invoicePaid:
+    post:
+      operationId: onInvoicePaid
+      summary: Invoice payment notification
+      requestBody:
+        description: Information about a paid invoice
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+            example:
+              invoiceId: "INV-2024-00012"
+              userId: 1001
+              amount: 49.99
+              paidAt: "2024-05-01T10:23:00Z"
+      responses:
+        '200':
+          description: Webhook successfully processed
+
+  # --- Event 3: Subscription cancelled ---
+  subscriptionCancelled:
+    post:
+      operationId: onSubscriptionCancelled
+      summary: Subscription was cancelled
+      requestBody:
+        description: Information about a cancelled subscription
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscription'
+            example:
+              subscriptionId: "SUB-88321"
+              userId: 1001
+              cancelledAt: "2024-06-15T14:42:00Z"
+      responses:
+        '200':
+          description: Webhook successfully processed
+
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    Invoice:
+      type: object
+      required: [invoiceId, userId, amount, paidAt]
+      properties:
+        invoiceId:
+          type: string
+        userId:
+          type: integer
+        amount:
+          type: number
+          format: float
+        paidAt:
+          type: string
+          format: date-time
+
+    Subscription:
+      type: object
+      required: [subscriptionId, userId, cancelledAt]
+      properties:
+        subscriptionId:
+          type: string
+        userId:
+          type: integer
+        cancelledAt:
+          type: string
+          format: date-time
