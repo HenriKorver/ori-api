@@ -5,5 +5,14 @@
 - Hoe hebben we het gedaan bij de ZGW Notififcatie API?
 - Hoe weet de broker API naar welke subscriber hij de status notificatie moet terug sturen?
 - Moeten we niet de hele vergadering met alle gerelateerde inhoud (agendapunten inclusief documenten) in één event meegeven (rijk of arm)?
+    - Of toch events opsplitsen in vergaderingen, agendapunten en documumenten want ze kunnen apart veranderen of later ontstaan?
 - In OAS de url naar het json schema van het schem-object laten genereren door Claude 4.5 of hoger
+- We kunnen de RIS-leveranciers ook zelf de event source laten ontsluiten, maar dan zonder POST zodat de RIS-levernaciers geen notificatie-abonnementen hoeft te beheren.
+- In de ZGW notificatie API zou in OAS 3.1 ook de event POST's naar de webhooks expliciet kunnen worden gemodelleerd door middel van EVENTS-hoofdelement.
+- Kijk naar RSS-feeds want dat ligt het dichts bij de ORI API
+- Kijk ook naar de uitwerkingen van Joep:
+    - https://vng-interactie-apis.netlify.app/
+    - https://github.com/VNG-Realisatie/Interactie-APIs/tree/main
 
+- Definition of done. Probeer de ZGW API's door de standaard spectral schema te krijgen en daarna de api design rule versie.
+- Wordt de architect van Joep en stuur hem aan vanuit de VNG.
