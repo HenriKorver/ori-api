@@ -16,3 +16,8 @@
 
 - Definition of done. Probeer de ZGW API's door de standaard spectral schema te krijgen en daarna de api design rule versie.
 - Wordt de architect van Joep en stuur hem aan vanuit de VNG.
+- Pushmodel eigenlijk niet zo slecht voor KOOP-voorziening. Leveranciers hebben een eenvoudig patroon om hun data synchroon in de KOOP-voorziening te schrijven. Dit biedt ook mogelijkheden om de aanleveringen goed uit te testen of ze correct zijn en passen in het complexe ORI-model met veel relaties.
+- De vraag is welk interface gaat KOOP bieden aan de hergebruikers
+    - Feedkanaal a la RSS met pull interactie?
+    - Websub (PubSubHub). KOOP gaat Notificatie-abonnementen aanbieden aan hergebruikers. RIS-leveranciers hebben de rol als Pub en Koop de rol als Hub en de hergebruikers als sub. Eigenlijk is KOOP ook de PUB omdat de events vanuit RIS-leveranciers niet direct worden geforward naar de hergebruikers. KOOP bouwt ook een eigen database op om een app met zoek-interface te kunnen bieden.
+    - De vorige maar dan met event-sourcing. Hergebruikers kunnen de opgeslagen events bevragen en opnieuw af laten spelen.
