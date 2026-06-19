@@ -32,3 +32,5 @@
 - docker genereren voor deployment
 - postgress database
 - maak een front-end applicatie (welke stack zullen we kiezen? Django, flask of React?)
+- Abstracte uri's gebruiken in plaats van url's
+- OAS 3.2 met hergebruik schema's en betere examples a la Kin Lang
