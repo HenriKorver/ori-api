@@ -1,3 +1,5 @@
+# Eerste app
+
 - Data arme events of rijk?
 - Moet de producer ook GET-operaties ondersteunen? Of alleen POST /event en Hooks?
 - Hoe worden de updates gecommuniceerd? json-update?
@@ -21,3 +23,12 @@
     - Feedkanaal a la RSS met pull interactie?
     - Websub (PubSubHub). KOOP gaat Notificatie-abonnementen aanbieden aan hergebruikers. RIS-leveranciers hebben de rol als Pub en Koop de rol als Hub en de hergebruikers als sub. Eigenlijk is KOOP ook de PUB omdat de events vanuit RIS-leveranciers niet direct worden geforward naar de hergebruikers. KOOP bouwt ook een eigen database op om een app met zoek-interface te kunnen bieden.
     - De vorige maar dan met event-sourcing. Hergebruikers kunnen de opgeslagen events bevragen en opnieuw af laten spelen.
+
+# Tweede app (mini-ori-api van KOOP)
+
+- Expand toevoegen?
+- Op alle velden kunnen filteren (zalando patroon)
+- oauth2 protocol
+- docker genereren voor deployment
+- postgress database
+- maak een front-end applicatie (welke stack zullen we kiezen? Django, flask of React?)

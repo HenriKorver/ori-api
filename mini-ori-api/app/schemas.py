@@ -165,6 +165,7 @@ class Vergadering(BaseModel):
     vergaderdatum: Optional[date] = None
     vergaderingstype: Optional[str] = None
     deelvergaderingen: list[str] = []
+    agendapunten: list[str] = []
 
 
 class PaginatedAgendapuntList(BaseModel):

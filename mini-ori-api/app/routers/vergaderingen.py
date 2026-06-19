@@ -53,6 +53,7 @@ def _to_schema(db_obj: VergaderingDB) -> Vergadering:
         )
 
     deelvergaderingen = [deel.url for deel in db_obj.deelvergaderingen] if db_obj.deelvergaderingen else []
+    agendapunten = [agenda.url for agenda in db_obj.agendapunten] if db_obj.agendapunten else []
 
     return Vergadering(
         id=db_obj.public_id,
@@ -74,12 +75,16 @@ def _to_schema(db_obj: VergaderingDB) -> Vergadering:
         vergaderdatum=db_obj.vergaderdatum,
         vergaderingstype=db_obj.vergaderingstype,
         deelvergaderingen=deelvergaderingen,
+        agendapunten=agendapunten,
     )
 
 
 @router.get("", response_model=PaginatedVergaderingList)
 def get_vergaderingen(session: Session = Depends(get_session)):
-    statement = select(VergaderingDB).options(selectinload(VergaderingDB.deelvergaderingen))
+    statement = select(VergaderingDB).options(
+        selectinload(VergaderingDB.deelvergaderingen),
+        selectinload(VergaderingDB.agendapunten),
+    )
     resultaten = session.exec(statement).all()
     return PaginatedVergaderingList(
         next=None,
@@ -137,7 +142,10 @@ def post_vergadering(payload: VergaderingZonderPid, session: Session = Depends(g
 
 @router.get("/{id}", response_model=Vergadering)
 def get_vergadering(id: str, session: Session = Depends(get_session)):
-    statement = select(VergaderingDB).where(VergaderingDB.public_id == id).options(selectinload(VergaderingDB.deelvergaderingen))
+    statement = select(VergaderingDB).where(VergaderingDB.public_id == id).options(
+        selectinload(VergaderingDB.deelvergaderingen),
+        selectinload(VergaderingDB.agendapunten),
+    )
     db_obj = session.exec(statement).first()
     if not db_obj:
         raise HTTPException(
