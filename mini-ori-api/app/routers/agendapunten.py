@@ -104,9 +104,12 @@ def post_agendapunt(payload: AgendapuntZonderPid, session: Session = Depends(get
 
     hoofdagendapunt_id = None
     if payload.hoofdagendapunt:
-        hoofd = session.exec(select(AgendapuntDB).where(AgendapuntDB.public_id == payload.hoofdagendapunt.id)).first()
+        hoofd = session.exec(select(AgendapuntDB).where(AgendapuntDB.public_id == payload.hoofdagendapunt)).first()
         if not hoofd:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Aanleverfout")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Het hoofdagendapunt met id '{payload.hoofdagendapunt}' is niet gevonden."
+            )
         hoofdagendapunt_id = hoofd.id
 
     public_id = str(uuid.uuid4())
@@ -197,7 +200,10 @@ def put_agendapunt(id: str, payload: Agendapunt, session: Session = Depends(get_
     if payload.hoofdagendapunt:
         hoofd = session.exec(select(AgendapuntDB).where(AgendapuntDB.public_id == payload.hoofdagendapunt.id)).first()
         if not hoofd:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Aanleverfout")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Het hoofdagendapunt met id '{payload.hoofdagendapunt.id}' is niet gevonden."
+            )
         hoofdagendapunt_id = hoofd.id
 
     db_obj.webpaginalink = payload.webpaginalink

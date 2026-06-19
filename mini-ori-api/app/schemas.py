@@ -43,7 +43,7 @@ class AgendapuntZonderPid(BaseModel):
     dossiertype: str
     agendapuntnaam: str
     vergadering: str
-    hoofdagendapunt: Optional[VerwijzingNaarResource] = None
+    hoofdagendapunt: Optional[str] = None
     omschrijving: Optional[str] = None
     volgnummer: Optional[str] = None
     subagendapunten: Optional[list[str]] = None

@@ -636,9 +636,10 @@ components:
           title: Vergadering
           description: "UUID-referentie naar de vergadering waar dit agendapunt behandeld wordt."
         hoofdagendapunt:
-          allOf:
-            - description: "Verwijzing naar het hoofdagendapunt waarvan dit het subagendapunt is."
-            - $ref: "#/components/schemas/VerwijzingNaarResource"
+          type: string
+          format: uuid
+          title: Hoofdagendapunt
+          description: "UUID-referentie naar het hoofdagendapunt waarvan dit het subagendapunt is."
         omschrijving:
           type: "string"
           title: "Agendapunt omschrijving"
