@@ -23,6 +23,8 @@
     - Feedkanaal a la RSS met pull interactie?
     - Websub (PubSubHub). KOOP gaat Notificatie-abonnementen aanbieden aan hergebruikers. RIS-leveranciers hebben de rol als Pub en Koop de rol als Hub en de hergebruikers als sub. Eigenlijk is KOOP ook de PUB omdat de events vanuit RIS-leveranciers niet direct worden geforward naar de hergebruikers. KOOP bouwt ook een eigen database op om een app met zoek-interface te kunnen bieden.
     - De vorige maar dan met event-sourcing. Hergebruikers kunnen de opgeslagen events bevragen en opnieuw af laten spelen.
+- Breidt openapi_v03_event_sourcing.yaml uit met cloud events.
+- Zit in de KOOP API een link terug naar de bron om de ori-data op te halen? Voldoet het aan het federatieve stelsel.
 
 # Tweede app (mini-ori-api van KOOP)
 
